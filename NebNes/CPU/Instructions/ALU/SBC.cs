@@ -10,7 +10,7 @@ namespace NebNes.CPU.Instructions.ALU {
         public void runAddress(ushort address) { }
 
         public void runImmediate(byte value) {
-            byte realValue = (byte)(0xFF - value - 0x01);
+            byte realValue = (byte)(0xFF - value);
             ADC adc = new ADC(cpu, bus);
             adc.runImmediate(realValue);
         }

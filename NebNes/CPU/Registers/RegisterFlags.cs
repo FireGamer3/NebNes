@@ -14,7 +14,7 @@ namespace NebNes.CPU.Registers {
         }
 
         public bool getFlag(FlagsIndex bit) {
-            return (value & (0x01 << (int)bit)) == 1;
+            return (value & (0x01 << (int)bit)) != 0;
         }
 
         public void setFlag(FlagsIndex bit) {
@@ -26,7 +26,7 @@ namespace NebNes.CPU.Registers {
         }
 
         public void updateZero(byte value) {
-            this.value = (byte)(value == 0 ? ByteLib.setBit(this.value, 2) : (this.value & 0b11111101));
+            this.value = (byte)(value == 0 ? ByteLib.setBit(this.value, 1) : (this.value & 0b11111101));
         }
 
         public void updateNegative(byte value) {
