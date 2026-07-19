@@ -1,0 +1,17 @@
+﻿namespace NebNes.Enums;
+
+public enum AddressingMode {
+    IMPLICIT,
+    ACCUMULATOR,
+    IMMEDIATE,
+    ZERO_PAGE,
+    ABSOLUTE,
+    RELATIVE,
+    INDIRECT,
+    ZERO_PAGE_INDEXED_X,
+    ZERO_PAGE_INDEXED_Y,
+    ABSOLUTE_INDEXED_X,
+    ABSOLUTE_INDEXED_Y,
+    INDEXED_INDIRECT,
+    INDIRECT_INDEXED
+}

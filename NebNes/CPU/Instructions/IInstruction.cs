@@ -4,6 +4,5 @@
         public void runImmediate(byte value);
         public void runAddress(ushort address);
         public void runAcc();
-        public void runValue(ushort address, byte value);
     }
 }

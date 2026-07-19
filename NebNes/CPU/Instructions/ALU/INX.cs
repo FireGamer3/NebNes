@@ -14,7 +14,5 @@ namespace NebNes.CPU.Instructions.ALU {
             cpu.X.increment();
             cpu.Flags.updateZeroAndNegative(cpu.X.get());
         }
-
-        public void runValue(ushort address, byte value) { }
     }
 }

@@ -31,6 +31,12 @@ namespace NebNes.Misc {
             return (byte)(res + (low & 0x0F));
         }
 
+        public static ushort buildU16(byte lo, byte hi) {
+            ushort res = (ushort)(hi & 0xFF);
+            res = (ushort)(res << 8);
+            return (ushort)(res + lo);
+        }
+
         public static bool isPositive(byte b) {
             return ((b & 0x80) >> 7) == 0;
         }

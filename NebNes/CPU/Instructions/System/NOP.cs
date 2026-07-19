@@ -1,6 +1,6 @@
 ﻿using NebNes.Misc;
 
-namespace NebNes.CPU.Instructions.Control {
+namespace NebNes.CPU.Instructions.System {
     public class NOP : Instruction, IInstruction {
         public NOP(MOS6502 cpu, Bus bus) : base(cpu, bus) { }
 
@@ -11,7 +11,5 @@ namespace NebNes.CPU.Instructions.Control {
         public void runImmediate(byte value) { }
 
         public void runImplicit() { }
-
-        public void runValue(ushort address, byte value) { }
     }
 }

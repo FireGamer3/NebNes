@@ -72,6 +72,12 @@ namespace NebNes.Misc {
             writeBusValue(value);
         }
 
+        public ushort read16(ushort address) {
+            byte lo = read(address);
+            byte hi = read((ushort)(address + 1));
+            return ByteLib.buildU16(lo, hi);
+        }
+
         private byte writeBusValue(byte val) {
             busValue = val;
             return busValue;

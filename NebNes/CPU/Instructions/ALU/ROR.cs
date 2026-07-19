@@ -18,8 +18,6 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runImplicit() { }
 
-        public void runValue(ushort address, byte value) { }
-
         private byte runROR(byte value) {
             bool carry = cpu.Flags.getFlag(Enums.FlagsIndex.C);
             bool setCarry = (value & 0x01) == 1;

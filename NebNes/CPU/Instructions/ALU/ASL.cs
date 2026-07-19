@@ -19,8 +19,6 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runImplicit() { }
 
-        public void runValue(ushort address, byte value) { }
-
         private byte runASL(byte value) {
             bool setCarry = ((value & 0x80) >> 7) == 1;
             byte newValue = (byte)(value << 1);

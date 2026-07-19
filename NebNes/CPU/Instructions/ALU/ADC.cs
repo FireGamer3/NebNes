@@ -1,7 +1,4 @@
 ﻿using NebNes.Misc;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NebNes.CPU.Instructions.ALU {
     public class ADC : Instruction, IInstruction {
@@ -14,8 +11,8 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runImmediate(byte value) {
             byte oldValue = cpu.A.get();
-            byte result = (byte)(oldValue + value + (cpu.Flags.getFlag(Enums.FlagsIndex.C) == false ? 0 : 1));
-            ushort short_result = (ushort)(oldValue + value + (cpu.Flags.getFlag(Enums.FlagsIndex.C) == false ? 0 : 1));
+            byte result = (byte)(oldValue + value + (!cpu.Flags.getFlag(Enums.FlagsIndex.C) ? 0 : 1));
+            ushort shortResult = (ushort)(oldValue + value + (!cpu.Flags.getFlag(Enums.FlagsIndex.C) ? 0 : 1));
             cpu.A.set(result);
             cpu.Flags.updateZeroAndNegative(result);
 
@@ -26,7 +23,7 @@ namespace NebNes.CPU.Instructions.ALU {
                  ByteLib.isNegative(value) &&
                  ByteLib.isPositive(result));
 
-            if (short_result > 0x00FF)
+            if (shortResult > 0x00FF)
                 cpu.Flags.setFlag(Enums.FlagsIndex.C);
             else cpu.Flags.clearFlag(Enums.FlagsIndex.C);
             if (v) cpu.Flags.setFlag(Enums.FlagsIndex.V);
@@ -34,7 +31,5 @@ namespace NebNes.CPU.Instructions.ALU {
         }
 
         public void runImplicit() { }
-
-        public void runValue(ushort address, byte value) { }
     }
 }

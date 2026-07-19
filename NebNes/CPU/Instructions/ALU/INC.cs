@@ -16,7 +16,5 @@ namespace NebNes.CPU.Instructions.ALU {
         public void runImmediate(byte value) { }
 
         public void runImplicit() { }
-
-        public void runValue(ushort address, byte value) { }
     }
 }
