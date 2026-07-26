@@ -6,7 +6,7 @@ namespace NebNes.APU.Registers {
 
         public override void onWrite(byte value) {
             set(value);
-            //apu.dmc.outputSample = directLoad();
+            apu.dmc.set(directLoad());
         }
 
         public byte directLoad() {

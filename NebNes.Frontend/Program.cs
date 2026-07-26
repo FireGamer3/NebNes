@@ -3,6 +3,10 @@ using Silk.NET.SDL;
 
 namespace NebNes.Frontend {
     internal static class Program {
+        // Roughly one emulated second of instructions; enough to catch boot-time divergence
+        // without filling the disk. Override with --trace-lines (0 for unlimited).
+        private const long DefaultTraceLines = 2_000_000;
+
         // Player 1 keyboard layout: arrows = D-pad, Z/X = B/A, Enter = Start, RShift = Select.
         private static readonly Dictionary<Scancode, ButtonKey> KeyMap = new() {
             [Scancode.ScancodeUp]     = ButtonKey.BUTTON_UP,
@@ -18,6 +22,9 @@ namespace NebNes.Frontend {
             string? romPath = null;
             int? scaleOverride = null;
             bool nestest = false;
+            bool trace = false;
+            string tracePath = "cpu-trace.log";
+            long traceLines = DefaultTraceLines;
 
             for (int i = 0; i < args.Length; i++) {
                 if (args[i] is "--scale" or "-s") {
@@ -25,6 +32,16 @@ namespace NebNes.Frontend {
                         scaleOverride = s;
                 } else if (args[i] is "--nestest" or "-t") {
                     nestest = true;
+                } else if (args[i] is "--trace" or "-l") {
+                    trace = true;
+                } else if (args[i] is "--trace-out") {
+                    if (i + 1 < args.Length) { tracePath = args[++i]; trace = true; }
+                } else if (args[i] is "--trace-lines") {
+                    // 0 = unlimited. A trace runs ~1.8M lines per emulated second, so cap it.
+                    if (i + 1 < args.Length && long.TryParse(args[++i], out long n) && n >= 0) {
+                        traceLines = n;
+                        trace = true;
+                    }
                 } else if (!args[i].StartsWith('-')) {
                     romPath = args[i];
                 }
@@ -40,7 +57,8 @@ namespace NebNes.Frontend {
 
             using var display = new Display(baseTitle, scale);
             using var audio = new AudioOutput();
-            var emulator = new Emulator(display, audio);
+            using var emulator = new Emulator(display, audio);
+            if (trace) emulator.EnableTrace(tracePath, traceLines);
 
             string titleBase = baseTitle;
             double lastFps = 0;
@@ -80,7 +98,7 @@ namespace NebNes.Frontend {
                 TryLoad(romPath);
             } else {
                 Console.WriteLine("No ROM given.");
-                Console.WriteLine("Usage: NebNes.Frontend <rom.nes> [--scale N]");
+                Console.WriteLine("Usage: NebNes.Frontend <rom.nes> [--scale N] [--trace [--trace-out FILE] [--trace-lines N]]");
                 Console.WriteLine("Or drop a .nes file onto the window, or press Ctrl+O to browse.");
             }
 

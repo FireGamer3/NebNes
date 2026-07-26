@@ -110,6 +110,20 @@ namespace NebNes.Misc {
             writeBusValue(value);
         }
 
+        /// <summary>
+        /// Read for debuggers/tracers only. Skips every mapped register (a real read there can clock
+        /// the PPU, APU or a controller shift register) and leaves the open-bus latch untouched.
+        /// </summary>
+        public byte peek(ushort address) {
+            if (address <= 0x1fff)
+                return wram[address & 0x07FF];
+
+            if (address >= 0x4020 && mapper is not null)
+                return mapper.cpuRead(address);
+
+            return busValue;
+        }
+
         public ushort read16(ushort address) {
             byte lo = read(address);
             byte hi = read((ushort)(address + 1));

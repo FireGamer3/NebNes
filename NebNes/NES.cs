@@ -8,7 +8,7 @@ using NebNes.PPU;
 using System.Numerics;
 
 namespace NebNes {
-    public class NES {
+    public class NES : IDisposable {
         IEmulatorHost host;
         Bus bus;
         MOS6502 cpu;
@@ -17,6 +17,7 @@ namespace NebNes {
         Controller[] controllers = {new Controller(), new Controller()};
         NesPPU ppu;
         NesAPU apu;
+        CpuTracer? tracer;
 
         private const int AudioChunkSize = 256;
         private readonly float[] audioChunk = new float[AudioChunkSize];
@@ -48,6 +49,27 @@ namespace NebNes {
             ppu.bus.Initialize(cart, mapper);
             bus.Initialize(mapper, ppu, apu, controllers);
             cpu.triggerInterrupt(InterruptIndex.RESET);
+        }
+
+        /// <summary>
+        /// Starts a nestest-format CPU trace at <paramref name="path"/>, beginning with the first
+        /// instruction after RESET. Debug aid only — it costs a formatted line per instruction.
+        /// </summary>
+        public void StartTrace(string path, long maxLines = CpuTracer.Unlimited) {
+            StopTrace();
+            tracer = CpuTracer.ToFile(cpu, bus, path, maxLines);
+            tracer.Attach();
+        }
+
+        public void StopTrace() {
+            tracer?.Dispose();
+            tracer = null;
+        }
+
+        public long TracedInstructions => tracer?.LinesWritten ?? 0;
+
+        public void Dispose() {
+            StopTrace();
         }
 
         public void stepSamples(int n) {

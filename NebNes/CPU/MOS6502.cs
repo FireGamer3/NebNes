@@ -13,12 +13,17 @@ namespace NebNes.CPU {
         public Register16Bit PC = new Register16Bit();
         public RegisterFlags Flags = new RegisterFlags();
         public RegisterInterrupts PendingInterrupts = new RegisterInterrupts();
-        public bool inInterrupt = false;
         public Stack stack;
         private Operation[] opTable;
         public long currentCycle = 0;
         private int cycles = 0;
         private int extraCycles = 0;
+
+        /// <summary>
+        /// Debug hook fired just before each instruction is decoded, with the registers still holding
+        /// their pre-instruction values. Null in normal operation; see <see cref="Misc.CpuTracer"/>.
+        /// </summary>
+        public Action<MOS6502>? OnInstruction;
 
         public MOS6502(Bus bus) {
             this.bus = bus;
@@ -32,7 +37,8 @@ namespace NebNes.CPU {
                 currentCycle++;
                 return 0;
             }
-            if (PendingInterrupts.get() > 0 && !inInterrupt) handlePendingInterrupt();
+            if (PendingInterrupts.get() > 0) handlePendingInterrupt();
+            OnInstruction?.Invoke(this);
             ushort originalPC = PC.get();
             Operation operation = fetchOperation();
             if (operation.instruction == null) {
@@ -81,8 +87,6 @@ namespace NebNes.CPU {
                 HandleInterrupt(InterruptIndex.RESET, 0xFFFC);
             } else if (PendingInterrupts.getInterrupt(InterruptIndex.NMI)) {
                 HandleInterrupt(InterruptIndex.NMI, 0xFFFA);
-            } else if (PendingInterrupts.getInterrupt(InterruptIndex.BRK)) {
-                HandleInterrupt(InterruptIndex.BRK, 0xFFFE);
             } else if (PendingInterrupts.getInterrupt(InterruptIndex.MAPPER)) {
                 if (Flags.getFlag(FlagsIndex.I)) return;
                 HandleInterrupt(InterruptIndex.MAPPER, 0xFFFE);
@@ -92,13 +96,18 @@ namespace NebNes.CPU {
         private void HandleInterrupt(InterruptIndex inter, ushort vector) {
             if (inter == InterruptIndex.RESET) cycles += 7;
             stack.push(PC.get());
-            byte flags = Flags.get();
-            if (inter == InterruptIndex.BRK) flags = ByteLib.setBit(flags, 4);
-            stack.push(flags);
+            stack.push((byte)((Flags.get() & ~0x10) | 0x20));
             Flags.setFlag(FlagsIndex.I);
-            if (inter != InterruptIndex.RESET) inInterrupt = true;
             PC.set(bus.read16(vector));
             PendingInterrupts.clearInterrupt(inter);
+        }
+
+        public Operation getOperation(byte opcode) {
+            return opTable[opcode];
+        }
+
+        public byte read(ushort address) {
+            return bus.read(address);
         }
 
         private Operation fetchOperation() {

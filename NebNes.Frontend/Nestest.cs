@@ -44,26 +44,16 @@ namespace NebNes.Frontend {
             cpu.SP.set(0xFD);
             cpu.Flags.set(0x24);
 
-            StringBuilder trace = new StringBuilder();
-            long cyc = 7;
+            // The CPU's own trace hook emits one line per instruction, in the same format the
+            // live --trace flag produces. CYC starts at 7 to match nestest.log's first line.
+            StringWriter sink = new StringWriter();
+            using CpuTracer tracer = new CpuTracer(cpu, bus, sink, MaxInstructions, cycleOffset: 7);
+            tracer.Attach();
+
             int executed = 0;
             for (; executed < MaxInstructions; executed++) {
                 ushort pc = cpu.PC.get();
-                byte op = bus.read(pc);
-                byte b1 = bus.read((ushort)(pc + 1));
-                byte b2 = bus.read((ushort)(pc + 2));
-
-                trace.Append(pc.ToString("X4")).Append("  ")
-                     .Append(op.ToString("X2")).Append(' ')
-                     .Append(b1.ToString("X2")).Append(' ')
-                     .Append(b2.ToString("X2")).Append("  ")
-                     .Append("A:").Append(cpu.A.get().ToString("X2"))
-                     .Append(" X:").Append(cpu.X.get().ToString("X2"))
-                     .Append(" Y:").Append(cpu.Y.get().ToString("X2"))
-                     .Append(" P:").Append(cpu.Flags.get().ToString("X2"))
-                     .Append(" SP:").Append(cpu.SP.get().ToString("X2"))
-                     .Append(" CYC:").Append(cyc)
-                     .Append('\n');
+                byte op = bus.peek(pc);
 
                 int n = cpu.step();          // executes exactly one instruction
                 if (n <= 0) {                // unknown opcode (MOS6502 prints its own message)
@@ -72,11 +62,12 @@ namespace NebNes.Frontend {
                     break;
                 }
                 for (int j = 0; j < n; j++) cpu.step();   // drain the cycle counter to the next boundary
-                cyc += n;
             }
+            tracer.Detach();
 
+            string trace = sink.ToString();
             string outPath = Path.Combine(Path.GetDirectoryName(romPath) ?? ".", "nestest.mine.log");
-            File.WriteAllText(outPath, trace.ToString());
+            File.WriteAllText(outPath, trace);
             Console.WriteLine($"nestest: executed {executed} instructions. Trace -> {outPath}");
 
             byte r02 = bus.read(0x0002);
@@ -84,7 +75,7 @@ namespace NebNes.Frontend {
             Console.WriteLine($"nestest: result codes  $02={r02:X2}  $03={r03:X2}  ({(r02 == 0 && r03 == 0 ? "PASS" : "FAIL")})");
 
             if (referencePath is not null && File.Exists(referencePath)) {
-                DiffAgainstReference(trace.ToString(), referencePath);
+                DiffAgainstReference(trace, referencePath);
             } else {
                 Console.WriteLine("nestest: no reference log found; skipping diff. (Expected at testRoms/nestest.log)");
             }

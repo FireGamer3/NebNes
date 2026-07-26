@@ -8,7 +8,7 @@ namespace NebNes.APU.Registers {
             set(value);
         }
 
-        public byte volumeOrEnvelopePeriod() {
+        public byte dpcmPeriodId() {
             return ByteLib.getBits(value, 0, 4);
         }
 

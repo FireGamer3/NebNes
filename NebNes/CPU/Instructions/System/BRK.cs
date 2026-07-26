@@ -1,4 +1,5 @@
-﻿using NebNes.Misc;
+﻿using NebNes.Enums;
+using NebNes.Misc;
 
 namespace NebNes.CPU.Instructions.System {
     public class BRK : Instruction, IInstruction {
@@ -11,7 +12,11 @@ namespace NebNes.CPU.Instructions.System {
         public void runImmediate(byte value) { }
 
         public void runImplicit() {
-            cpu.triggerInterrupt(Enums.InterruptIndex.BRK);
+            cpu.PC.increment();
+            cpu.stack.push(cpu.PC.get());
+            cpu.stack.push((byte)(cpu.Flags.get() | 0x30));
+            cpu.Flags.setFlag(FlagsIndex.I);
+            cpu.PC.set(bus.read16(0xFFFE));
         }
     }
 }

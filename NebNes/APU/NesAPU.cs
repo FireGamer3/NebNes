@@ -11,6 +11,7 @@ namespace NebNes.APU {
         public PulseChannel[] pulses = new PulseChannel[2];
         public TriangleChannel triangle;
         public NoiseChannel noise;
+        public DMCChannel dmc;
 
         int sampleCounter = 0;
 
@@ -26,6 +27,7 @@ namespace NebNes.APU {
             pulses[1] = new PulseChannel(this, 1);
             triangle = new TriangleChannel(this);
             noise = new NoiseChannel(this);
+            dmc = new DMCChannel(cpu, this);
         }
 
 
@@ -34,6 +36,7 @@ namespace NebNes.APU {
             pulses[0].step();
             pulses[1].step();
             noise.step();
+            dmc.step();
             sampleCounter++;
             frameSequencer.step();
             if(sampleCounter == 20) {
@@ -42,11 +45,13 @@ namespace NebNes.APU {
                 double pulse2 = pulses[1].sample();
                 double tri = triangle.sample();
                 double noisy = noise.sample();
+                double dmcs = dmc.sample();
 
                 double raw = (
                     0.00752 * (pulse1 + pulse2) +
                     0.00851 * tri +
-                    0.00494 * noisy
+                    0.00494 * noisy +
+                    0.00335 * dmcs
                 );
 
                 // y[n] = x[n] - x[n-1] + R*y[n-1]
