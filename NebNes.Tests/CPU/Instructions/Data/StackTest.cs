@@ -102,7 +102,8 @@ namespace NebNes.Tests.CPU.Instructions.Data {
             pushedState = bus.read(0x01FF);
             cpu.Flags.set(0x00); // wipe flags
             new PLP(cpu, bus).runImplicit();
-            cpu.Flags.get().Should().Be(pushedState);
+            // PLP drops the pushed B flag (bit 4) and forces the unused bit 5 to 1.
+            cpu.Flags.get().Should().Be((byte)((pushedState & 0xEF) | 0x20));
         }
     }
 }

@@ -68,7 +68,8 @@ namespace NebNes.Tests.CPU.Instructions.Branching {
             bus.write(0x01FF, 0x90); // PC high
             new RTI(cpu, bus).runImplicit();
 
-            cpu.Flags.get().Should().Be(0xC1);
+            // RTI drops the pulled B flag (bit 4) and forces the unused bit 5 to 1: 0xC1 -> 0xE1
+            cpu.Flags.get().Should().Be(0xE1);
             cpu.PC.get().Should().Be(0x9000);
             cpu.SP.get().Should().Be(0xFF);
         }

@@ -11,7 +11,8 @@ namespace NebNes.CPU.Instructions.Data {
         public void runImmediate(byte value) { }
 
         public void runImplicit() {
-            byte val = cpu.stack.pop();
+            // Pulling flags discards the B flag (bit 4) and forces the unused bit 5 to 1.
+            byte val = (byte)((cpu.stack.pop() & 0xEF) | 0x20);
             cpu.Flags.set(val);
         }
     }

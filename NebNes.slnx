@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="NebNes.Tests/NebNes.Tests.csproj" Id="9f06309e-f6d0-4e2b-a634-7a9abd2188b4" />
   <Project Path="NebNes/NebNes.csproj" />
+  <Project Path="NebNes.Frontend/NebNes.Frontend.csproj" />
 </Solution>

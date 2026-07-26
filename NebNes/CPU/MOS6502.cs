@@ -1,23 +1,63 @@
-﻿using NebNes.CPU.Registers;
+﻿using NebNes.CPU.Instructions;
+using NebNes.CPU.Registers;
 using NebNes.Enums;
 using NebNes.Misc;
 
 namespace NebNes.CPU {
     public class MOS6502 {
         private Bus bus;
-        public Register8Bit A = new Register8Bit();
-        public Register8Bit X = new Register8Bit();
-        public Register8Bit Y = new Register8Bit();
-        public Register8Bit SP = new Register8Bit();
+        public BaseRegister A = new BaseRegister();
+        public BaseRegister X = new BaseRegister();
+        public BaseRegister Y = new BaseRegister();
+        public BaseRegister SP = new BaseRegister();
         public Register16Bit PC = new Register16Bit();
         public RegisterFlags Flags = new RegisterFlags();
+        public RegisterInterrupts PendingInterrupts = new RegisterInterrupts();
+        public bool inInterrupt = false;
         public Stack stack;
+        private Operation[] opTable;
+        public long currentCycle = 0;
         private int cycles = 0;
         private int extraCycles = 0;
 
         public MOS6502(Bus bus) {
             this.bus = bus;
             stack = new Stack(bus, SP);
+            opTable = DefineOperations.define(this, bus);
+        }
+
+        public int step() {
+            if(cycles > 0) {
+                cycles--;
+                currentCycle++;
+                return 0;
+            }
+            if (PendingInterrupts.get() > 0 && !inInterrupt) handlePendingInterrupt();
+            ushort originalPC = PC.get();
+            Operation operation = fetchOperation();
+            if (operation.instruction == null) {
+                Console.WriteLine($"Unknown Instruction at ${originalPC:X4} opcode ${bus.read(originalPC):X2}");
+                return 0;
+            }
+            switch(operation.addressMode) {
+                case AddressingMode.IMMEDIATE:
+                    byte val = fetchByte();
+                    operation.instruction.runImmediate(val);
+                    break;
+                case AddressingMode.IMPLICIT:
+                    operation.instruction.runImplicit();
+                    break;
+                case AddressingMode.ACCUMULATOR:
+                    operation.instruction.runAcc();
+                    break;
+                default:
+                    operation.instruction.runAddress(resolveAddress(operation.addressMode));
+                    break;
+            }
+            int totalCycles = operation.cycles + extraCycles;
+            extraCycles = 0;
+            cycles += totalCycles;
+            return totalCycles;
         }
 
         public void addCycles(int cycles = 1) {
@@ -30,6 +70,42 @@ namespace NebNes.CPU {
 
         public void clearExtraCycles() {
             extraCycles = 0;
+        }
+
+        public void triggerInterrupt(InterruptIndex ii) {
+            PendingInterrupts.setInterrupt(ii);
+        }
+
+        private void handlePendingInterrupt() {
+            if (PendingInterrupts.getInterrupt(InterruptIndex.RESET)) {
+                HandleInterrupt(InterruptIndex.RESET, 0xFFFC);
+            } else if (PendingInterrupts.getInterrupt(InterruptIndex.NMI)) {
+                HandleInterrupt(InterruptIndex.NMI, 0xFFFA);
+            } else if (PendingInterrupts.getInterrupt(InterruptIndex.BRK)) {
+                HandleInterrupt(InterruptIndex.BRK, 0xFFFE);
+            } else if (PendingInterrupts.getInterrupt(InterruptIndex.MAPPER)) {
+                if (Flags.getFlag(FlagsIndex.I)) return;
+                HandleInterrupt(InterruptIndex.MAPPER, 0xFFFE);
+            }
+        }
+
+        private void HandleInterrupt(InterruptIndex inter, ushort vector) {
+            if (inter == InterruptIndex.RESET) cycles += 7;
+            stack.push(PC.get());
+            byte flags = Flags.get();
+            if (inter == InterruptIndex.BRK) flags = ByteLib.setBit(flags, 4);
+            stack.push(flags);
+            Flags.setFlag(FlagsIndex.I);
+            if (inter != InterruptIndex.RESET) inInterrupt = true;
+            PC.set(bus.read16(vector));
+            PendingInterrupts.clearInterrupt(inter);
+        }
+
+        private Operation fetchOperation() {
+            byte opcode = bus.read(PC.get());
+            Operation op = opTable[opcode];
+            PC.increment();
+            return op;
         }
 
         private ushort resolveAddress(AddressingMode mode) {

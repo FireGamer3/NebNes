@@ -4,9 +4,9 @@ using NebNes.Misc;
 namespace NebNes.CPU {
     public class Stack {
         Bus bus;
-        Register8Bit sp;
+        BaseRegister sp;
 
-        public Stack(Bus bus, Register8Bit sp) {
+        public Stack(Bus bus, BaseRegister sp) {
             this.bus = bus;
             this.sp = sp;
         }

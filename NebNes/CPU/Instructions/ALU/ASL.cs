@@ -1,4 +1,5 @@
 ﻿using NebNes.Misc;
+using System.Net;
 
 namespace NebNes.CPU.Instructions.ALU {
     public class ASL : Instruction, IInstruction {
@@ -11,8 +12,8 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runAddress(ushort address) {
             byte value = bus.read(address);
+            bus.write(address, value);
             bus.write(address, runASL(value));
-
         }
 
         public void runImmediate(byte value) { }

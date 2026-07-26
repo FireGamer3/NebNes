@@ -6,7 +6,9 @@ namespace NebNes.CPU.Instructions.Data {
 
         public void runAcc() { }
 
-        public void runAddress(ushort address) { }
+        public void runAddress(ushort address) {
+            runImmediate(bus.read(address));
+        }
 
         public void runImmediate(byte value) {
             cpu.A.set(value);

@@ -11,7 +11,9 @@ namespace NebNes.CPU.Instructions.Branching {
         public void runImmediate(byte value) { }
 
         public void runImplicit() {
-            cpu.Flags.set(cpu.stack.pop());
+            cpu.inInterrupt = false;
+            // Pulling flags discards the B flag (bit 4) and forces the unused bit 5 to 1.
+            cpu.Flags.set((byte)((cpu.stack.pop() & 0xEF) | 0x20));
             cpu.PC.set(cpu.stack.pop16());
         }
     }

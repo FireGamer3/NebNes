@@ -7,9 +7,17 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runAcc() { }
 
-        public void runAddress(ushort address) { }
+        public void runAddress(ushort address) {
+            run(bus.read(address));
+        }
 
         public void runImmediate(byte value) {
+            run(value);
+        }
+
+        public void runImplicit() { }
+
+        private void run(byte value) {
             byte oldValue = cpu.A.get();
             byte result = (byte)(oldValue + value + (!cpu.Flags.getFlag(Enums.FlagsIndex.C) ? 0 : 1));
             ushort shortResult = (ushort)(oldValue + value + (!cpu.Flags.getFlag(Enums.FlagsIndex.C) ? 0 : 1));
@@ -29,7 +37,5 @@ namespace NebNes.CPU.Instructions.ALU {
             if (v) cpu.Flags.setFlag(Enums.FlagsIndex.V);
             else cpu.Flags.clearFlag(Enums.FlagsIndex.V);
         }
-
-        public void runImplicit() { }
     }
 }

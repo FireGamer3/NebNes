@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace NebNes.CPU.Registers {
-    public class Register8Bit {
+    public class BaseRegister {
         private byte value = 0;
 
         public byte get() {

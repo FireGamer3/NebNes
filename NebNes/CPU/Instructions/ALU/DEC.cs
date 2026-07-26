@@ -8,6 +8,7 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runAddress(ushort address) {
             byte value = bus.read(address);
+            bus.write(address, value);
             value -= 1;
             bus.write(address, value);
             cpu.Flags.updateZeroAndNegative(value);

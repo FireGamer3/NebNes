@@ -1,12 +1,13 @@
 ﻿using NebNes.CPU;
+using NebNes.Enums;
 using NebNes.Misc;
 
 namespace NebNes.Mappers {
     public class Mapper {
         protected MOS6502 cpu;
         protected Cart cart;
-        private byte[] prg;
-        private byte[] chr;
+        protected byte[] prg;
+        protected byte[] chr;
         private int totalPrgPages;
         private int totalChrPages;
 
@@ -34,6 +35,10 @@ namespace NebNes.Mappers {
         }
 
         public void onLoad() { }
+
+        public virtual PPUBgMirroring getMirroring() {
+            return cart.getMirroring();
+        }
 
 
         public byte[] getPrgPage(int page) {

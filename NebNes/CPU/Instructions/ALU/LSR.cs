@@ -11,6 +11,7 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runAddress(ushort address) {
             byte value = bus.read(address);
+            bus.write(address, value);
             bus.write(address, runLSR(value));
 
         }
