@@ -45,8 +45,21 @@ namespace NebNes.Misc {
             return _romBytes[startIndex..(startIndex + (16384 * prgRomPages()))];
         }
 
+        public bool isNes2() {
+            return ByteLib.getBits(_romBytes[7], 2, 2) == 0b10;
+        }
+
+        public int chrRamSize() {
+            if (!isNes2()) return 8192;
+            int volatileShift = ByteLib.getBits(_romBytes[11], 0, 4);
+            int nvramShift = ByteLib.getBits(_romBytes[11], 4, 4);
+            int size = (volatileShift == 0 ? 0 : 64 << volatileShift)
+                     + (nvramShift == 0 ? 0 : 64 << nvramShift);
+            return Math.Max(8192, size);
+        }
+
         public byte[] getChr() {
-            if (usesChrRam()) return new byte[8192];
+            if (usesChrRam()) return new byte[chrRamSize()];
             int startIndex = prgStartByte() + (16384 * prgRomPages());
             return _romBytes[startIndex..(startIndex + (8192 * chrRomPages()))];
         }

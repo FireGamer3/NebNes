@@ -1,4 +1,5 @@
 ﻿using NebNes.CPU;
+using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 
 namespace NebNes.Mappers {

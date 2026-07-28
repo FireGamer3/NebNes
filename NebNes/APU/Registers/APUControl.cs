@@ -11,15 +11,16 @@ namespace NebNes.APU.Registers {
             if(enablePulse2() == 0)
                 apu.pulses[1].lengthCounter.reset();
             if(enableTriangle() == 0) {
-                //reset length counters
+                apu.triangle.lengthCounter.reset();
+                apu.triangle.linearLengthCounter.fullReset();
             }
             if(enableNoise() == 0) {
-                //reset length counter
+                apu.noise.lengthCounter.reset();
             }
             if(enableDMC() == 0) {
-                //stop DPCM
-            }else { // add if for remaining bytes
-                //start if there are bytes ready
+                apu.dmc.dpcm.stop();
+            }else if (apu.dmc.dpcm.remainingBytes() == 0) {
+                apu.dmc.dpcm.start();
             }
         }
 

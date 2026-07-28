@@ -2,7 +2,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NebNes.APU;
 using NebNes.CPU;
-using NebNes.Mappers;
+using NebNes.Mappers.Interfaces;
+using NebNes.Mappers.Misc;
 using NebNes.Misc;
 using NebNes.PPU;
 

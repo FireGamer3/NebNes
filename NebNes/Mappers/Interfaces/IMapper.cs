@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NebNes.Enums;
 
-namespace NebNes.Mappers {
+namespace NebNes.Mappers.Interfaces {
     public interface IMapper {
         public void onLoad();
         public byte cpuRead(ushort address);

@@ -2,7 +2,9 @@
 
 namespace NebNes.CPU.Instructions.ALU {
     public class SBC : Instruction, IInstruction {
+        ADC adc;
         public SBC(MOS6502 cpu, Bus bus) : base(cpu, bus) {
+            adc = new ADC(cpu, bus);
         }
 
         public void runAcc() { }
@@ -13,7 +15,6 @@ namespace NebNes.CPU.Instructions.ALU {
 
         public void runImmediate(byte value) {
             byte realValue = (byte)(0xFF - value);
-            ADC adc = new ADC(cpu, bus);
             adc.runImmediate(realValue);
         }
 

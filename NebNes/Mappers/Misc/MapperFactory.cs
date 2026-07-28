@@ -1,7 +1,8 @@
 ﻿using NebNes.CPU;
+using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 
-namespace NebNes.Mappers {
+namespace NebNes.Mappers.Misc {
     public static class MapperFactory {
 
         public static IMapper CreateMapper(MOS6502 cpu, Cart cart) {
@@ -14,6 +15,8 @@ namespace NebNes.Mappers {
                     return new UxROM(cpu, cart);
                 case 3:
                     return new CNROM(cpu, cart);
+                case 4:
+                    return new MMC3(cpu, cart);
                 default:
                     throw new ArgumentException("Mapper with ID: " +  cart.getMapperID() + ", Not Found");
             }

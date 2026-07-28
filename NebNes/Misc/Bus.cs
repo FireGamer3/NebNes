@@ -1,5 +1,5 @@
 ﻿using NebNes.APU;
-using NebNes.Mappers;
+using NebNes.Mappers.Interfaces;
 using NebNes.PPU;
 
 

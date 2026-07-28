@@ -1,5 +1,6 @@
-﻿using NebNes.CPU;
+using NebNes.CPU;
 using NebNes.Enums;
+using NebNes.Mappers.Misc;
 using NebNes.Misc;
 
 namespace NebNes.Mappers {
@@ -8,29 +9,25 @@ namespace NebNes.Mappers {
         protected Cart cart;
         protected byte[] prg;
         protected byte[] chr;
-        private int totalPrgPages;
-        private int totalChrPages;
 
-        protected byte[][] prgPages;
-        protected byte[][] chrPages;
+        protected PageTable prgPages;
+        protected PageTable prgPages8k;
+        protected PageTable chrPages;
+        protected PageTable chrPages2k;
+        protected PageTable chrPages1k;
 
         public Mapper(MOS6502 cpu, Cart cart) {
             this.cpu = cpu;
             this.cart = cart;
             prg = cart.getPrg();
             chr = cart.getChr();
-            totalPrgPages = (int)Math.Floor((double)(prg.Length / (16 * 1024)));
-            totalChrPages = (int)Math.Floor((double)(chr.Length / (8 * 1024)));
-            prgPages = new byte[totalPrgPages][];
-            chrPages = new byte[totalChrPages][];
-            for (int i = 0; i < totalPrgPages; i++) {
-                int offset = i * (16 * 1024);
-                prgPages[i] = prg[offset..(offset + (16 * 1024))];
-            }
-            for (int i = 0; i < totalChrPages; i++) {
-                int offset = i * (8 * 1024);
-                chrPages[i] = chr[offset..(offset + (8 * 1024))];
-            }
+            int totalPrgPages = prg.Length / (16 * 1024);
+            int totalChrPages = chr.Length / (8 * 1024);
+            prgPages = new PageTable(prg, 16 * 1024, totalPrgPages);
+            prgPages8k = new PageTable(prg, 8 * 1024, totalPrgPages * 2);
+            chrPages = new PageTable(chr, 8 * 1024, totalChrPages);
+            chrPages2k = new PageTable(chr, 2 * 1024, totalChrPages * 4);
+            chrPages1k = new PageTable(chr, 1024, totalChrPages * 8);
             onLoad();
         }
 
@@ -41,12 +38,24 @@ namespace NebNes.Mappers {
         }
 
 
-        public byte[] getPrgPage(int page) {
-            return prgPages[Math.Max(0, page %  prgPages.Length)];
+        public Span<byte> getPrgPage(int page) {
+            return prgPages.wrapped(page);
         }
 
-        public byte[] getChrPage(int page) {
-            return chrPages[Math.Max(0, page % chrPages.Length)];
+        public Span<byte> getPrgPage8K(int page) {
+            return prgPages8k.wrapped(page);
+        }
+
+        public Span<byte> getChrPage(int page) {
+            return chrPages.wrapped(page);
+        }
+
+        public Span<byte> getChrPage2K(int page) {
+            return chrPages2k.wrapped(page);
+        }
+
+        public Span<byte> getChrPage1K(int page) {
+            return chrPages1k.wrapped(page);
         }
     }
 }

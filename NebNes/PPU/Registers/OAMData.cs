@@ -10,6 +10,7 @@
         public override void onWrite(byte value) {
             byte oamAddress = ppu.oamAddr.getValue();
             ppu.bus.oamRam[oamAddress] = value;
+            ppu.oamAddr.set((byte)(oamAddress + 1));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using NebNes.CPU;
 using NebNes.Enums;
+using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 
 namespace NebNes.Mappers {
@@ -16,7 +17,7 @@ namespace NebNes.Mappers {
         public MMC1(MOS6502 cpu, Cart cart) : base(cpu, cart) { }
 
         public byte cpuRead(ushort address) {
-            if(address >= 0x6000 && address <= 0x7FFF && cart.hasPrgRam() && prgRamEnabled()) {
+            if(address >= 0x6000 && address <= 0x7FFF) {
                 return prgRam[address - 0x6000];
             }
             if (address >= 0x8000 && address <= 0xBFFF) {
@@ -29,7 +30,7 @@ namespace NebNes.Mappers {
         }
 
         public void cpuWrite(ushort address, byte value) {
-            if (address >= 0x6000 && address <= 0x7FFF && cart.hasPrgRam() && prgRamEnabled())
+            if (address >= 0x6000 && address <= 0x7FFF)
                 prgRam[address - 0x6000] = value;
             if (address >= 0x8000) {
                 if(ByteLib.getBit(value, 7) == 1) {

@@ -1,5 +1,5 @@
 ﻿using NebNes.Enums;
-using NebNes.Mappers;
+using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 
 namespace NebNes.PPU {

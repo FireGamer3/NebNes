@@ -2,7 +2,8 @@
 using NebNes.CPU;
 using NebNes.CPU.Interfaces;
 using NebNes.Enums;
-using NebNes.Mappers;
+using NebNes.Mappers.Interfaces;
+using NebNes.Mappers.Misc;
 using NebNes.Misc;
 using NebNes.PPU;
 using System.Numerics;

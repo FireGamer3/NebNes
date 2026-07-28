@@ -2,6 +2,7 @@
 using NebNes.CPU.Registers;
 using NebNes.Enums;
 using NebNes.Misc;
+using System.Diagnostics;
 
 namespace NebNes.CPU {
     public class MOS6502 {

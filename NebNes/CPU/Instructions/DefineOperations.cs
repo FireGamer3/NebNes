@@ -2,6 +2,7 @@ using NebNes.CPU.Instructions.ALU;
 using NebNes.CPU.Instructions.Branching;
 using NebNes.CPU.Instructions.Checks;
 using NebNes.CPU.Instructions.Data;
+using NebNes.CPU.Instructions.Illegal;
 using NebNes.CPU.Instructions.System;
 using NebNes.Enums;
 using NebNes.Misc;
@@ -80,6 +81,16 @@ namespace NebNes.CPU.Instructions {
             // System
             NOP nop = new NOP(cpu, bus);
             BRK brk = new BRK(cpu, bus);
+
+            //Illegal
+            SLO slo = new SLO(cpu, bus);
+            RLA rla = new RLA(cpu, bus);
+            SRE sre = new SRE(cpu, bus);
+            RRA rra = new RRA(cpu, bus);
+            SAX sax = new SAX(cpu, bus);
+            LAX lax = new LAX(cpu, bus);
+            DCP dcp = new DCP(cpu, bus);
+            ISC isc = new ISC(cpu, bus);
 
             // ── ADC ────────────────────────────────────────────────────────────
             table[0x69] = new Operation(0x69, 2, AddressingMode.IMMEDIATE, adc);
@@ -297,6 +308,104 @@ namespace NebNes.CPU.Instructions {
             table[0x8A] = new Operation(0x8A, 2, AddressingMode.IMPLICIT, txa);
             table[0x9A] = new Operation(0x9A, 2, AddressingMode.IMPLICIT, txs);
             table[0x98] = new Operation(0x98, 2, AddressingMode.IMPLICIT, tya);
+
+            // ── Unofficial NOPs ────────────────────────────────────────────────
+            table[0x04] = new Operation(0x04, 3, AddressingMode.ZERO_PAGE, nop);
+            table[0x0C] = new Operation(0x0C, 4, AddressingMode.ABSOLUTE, nop);
+            table[0x14] = new Operation(0x14, 4, AddressingMode.ZERO_PAGE_INDEXED_X, nop);
+            table[0x1A] = new Operation(0x1A, 2, AddressingMode.IMPLICIT, nop);
+            table[0x1C] = new Operation(0x1C, 4, AddressingMode.ABSOLUTE_INDEXED_X, nop);
+            table[0x34] = new Operation(0x34, 4, AddressingMode.ZERO_PAGE_INDEXED_X, nop);
+            table[0x3A] = new Operation(0x3A, 2, AddressingMode.IMPLICIT, nop);
+            table[0x3C] = new Operation(0x3C, 4, AddressingMode.ABSOLUTE_INDEXED_X, nop);
+            table[0x44] = new Operation(0x44, 3, AddressingMode.ZERO_PAGE, nop);
+            table[0x54] = new Operation(0x54, 4, AddressingMode.ZERO_PAGE_INDEXED_X, nop);
+            table[0x5A] = new Operation(0x5A, 2, AddressingMode.IMPLICIT, nop);
+            table[0x5C] = new Operation(0x5C, 4, AddressingMode.ABSOLUTE_INDEXED_X, nop);
+            table[0x64] = new Operation(0x64, 3, AddressingMode.ZERO_PAGE, nop);
+            table[0x74] = new Operation(0x74, 4, AddressingMode.ZERO_PAGE_INDEXED_X, nop);
+            table[0x7A] = new Operation(0x7A, 2, AddressingMode.IMPLICIT, nop);
+            table[0x7C] = new Operation(0x7C, 4, AddressingMode.ABSOLUTE_INDEXED_X, nop);
+            table[0x80] = new Operation(0x80, 2, AddressingMode.IMMEDIATE, nop);
+            table[0x82] = new Operation(0x82, 2, AddressingMode.IMMEDIATE, nop);
+            table[0x89] = new Operation(0x89, 2, AddressingMode.IMMEDIATE, nop);
+            table[0xC2] = new Operation(0xC2, 2, AddressingMode.IMMEDIATE, nop);
+            table[0xD4] = new Operation(0xD4, 4, AddressingMode.ZERO_PAGE_INDEXED_X, nop);
+            table[0xDA] = new Operation(0xDA, 2, AddressingMode.IMPLICIT, nop);
+            table[0xDC] = new Operation(0xDC, 4, AddressingMode.ABSOLUTE_INDEXED_X, nop);
+            table[0xE2] = new Operation(0xE2, 2, AddressingMode.IMMEDIATE, nop);
+            table[0xF4] = new Operation(0xF4, 4, AddressingMode.ZERO_PAGE_INDEXED_X, nop);
+            table[0xFA] = new Operation(0xFA, 2, AddressingMode.IMPLICIT, nop);
+            table[0xFC] = new Operation(0xFC, 4, AddressingMode.ABSOLUTE_INDEXED_X, nop);
+
+            // ── Unofficial SLOs ────────────────────────────────────────────────
+            table[0x03] = new Operation(0x03, 8, AddressingMode.INDEXED_INDIRECT, slo);
+            table[0x07] = new Operation(0x07, 5, AddressingMode.ZERO_PAGE, slo);
+            table[0x0F] = new Operation(0x0F, 6, AddressingMode.ABSOLUTE, slo);
+            table[0x13] = new Operation(0x13, 8, AddressingMode.INDIRECT_INDEXED, slo);
+            table[0x17] = new Operation(0x17, 6, AddressingMode.ZERO_PAGE_INDEXED_X, slo);
+            table[0x1B] = new Operation(0x1B, 7, AddressingMode.ABSOLUTE_INDEXED_Y, slo);
+            table[0x1F] = new Operation(0x1F, 7, AddressingMode.ABSOLUTE_INDEXED_X, slo);
+
+            // ── Unofficial RLAs ────────────────────────────────────────────────
+            table[0x23] = new Operation(0x23, 8, AddressingMode.INDEXED_INDIRECT, rla);
+            table[0x27] = new Operation(0x27, 5, AddressingMode.ZERO_PAGE, rla);
+            table[0x2F] = new Operation(0x2F, 6, AddressingMode.ABSOLUTE, rla);
+            table[0x33] = new Operation(0x33, 8, AddressingMode.INDIRECT_INDEXED, rla);
+            table[0x37] = new Operation(0x37, 6, AddressingMode.ZERO_PAGE_INDEXED_X, rla);
+            table[0x3B] = new Operation(0x3B, 7, AddressingMode.ABSOLUTE_INDEXED_Y, rla);
+            table[0x3F] = new Operation(0x3F, 7, AddressingMode.ABSOLUTE_INDEXED_X, rla);
+
+            // ── Unofficial SREs ────────────────────────────────────────────────
+            table[0x43] = new Operation(0x43, 8, AddressingMode.INDEXED_INDIRECT, sre);
+            table[0x47] = new Operation(0x47, 5, AddressingMode.ZERO_PAGE, sre);
+            table[0x4F] = new Operation(0x4F, 6, AddressingMode.ABSOLUTE, sre);
+            table[0x53] = new Operation(0x53, 8, AddressingMode.INDIRECT_INDEXED, sre);
+            table[0x57] = new Operation(0x57, 6, AddressingMode.ZERO_PAGE_INDEXED_X, sre);
+            table[0x5B] = new Operation(0x5B, 7, AddressingMode.ABSOLUTE_INDEXED_Y, sre);
+            table[0x5F] = new Operation(0x5F, 7, AddressingMode.ABSOLUTE_INDEXED_X, sre);
+
+            // ── Unofficial RRAs ────────────────────────────────────────────────
+            table[0x63] = new Operation(0x63, 8, AddressingMode.INDEXED_INDIRECT, rra);
+            table[0x67] = new Operation(0x67, 5, AddressingMode.ZERO_PAGE, rra);
+            table[0x6F] = new Operation(0x6F, 6, AddressingMode.ABSOLUTE, rra);
+            table[0x73] = new Operation(0x73, 8, AddressingMode.INDIRECT_INDEXED, rra);
+            table[0x77] = new Operation(0x77, 6, AddressingMode.ZERO_PAGE_INDEXED_X, rra);
+            table[0x7B] = new Operation(0x7B, 7, AddressingMode.ABSOLUTE_INDEXED_Y, rra);
+            table[0x7F] = new Operation(0x7F, 7, AddressingMode.ABSOLUTE_INDEXED_X, rra);
+
+            // ── Unofficial SAXs ────────────────────────────────────────────────
+            table[0x83] = new Operation(0x83, 6, AddressingMode.INDEXED_INDIRECT, sax);
+            table[0x87] = new Operation(0x87, 3, AddressingMode.ZERO_PAGE, sax);
+            table[0x8F] = new Operation(0x8F, 4, AddressingMode.ABSOLUTE, sax);
+            table[0x97] = new Operation(0x97, 4, AddressingMode.ZERO_PAGE_INDEXED_Y, sax);
+
+            // ── Unofficial LAXs ────────────────────────────────────────────────
+            table[0xA3] = new Operation(0xA3, 6, AddressingMode.INDEXED_INDIRECT, lax);
+            table[0xA7] = new Operation(0xA7, 3, AddressingMode.ZERO_PAGE, lax);
+            table[0xAB] = new Operation(0xAB, 2, AddressingMode.IMMEDIATE, lax);
+            table[0xAF] = new Operation(0xAF, 4, AddressingMode.ABSOLUTE, lax);
+            table[0xB3] = new Operation(0xB3, 5, AddressingMode.INDIRECT_INDEXED, lax);
+            table[0xB7] = new Operation(0xB7, 4, AddressingMode.ZERO_PAGE_INDEXED_Y, lax);
+            table[0xBF] = new Operation(0xBF, 4, AddressingMode.ABSOLUTE_INDEXED_Y, lax);
+
+            // ── Unofficial DCPs ────────────────────────────────────────────────
+            table[0xC3] = new Operation(0x63, 8, AddressingMode.INDEXED_INDIRECT, dcp);
+            table[0xC7] = new Operation(0x67, 5, AddressingMode.ZERO_PAGE, dcp);
+            table[0xCF] = new Operation(0x6F, 6, AddressingMode.ABSOLUTE, dcp);
+            table[0xD3] = new Operation(0x73, 8, AddressingMode.INDIRECT_INDEXED, dcp);
+            table[0xD7] = new Operation(0x77, 6, AddressingMode.ZERO_PAGE_INDEXED_X, dcp);
+            table[0xDB] = new Operation(0x7B, 7, AddressingMode.ABSOLUTE_INDEXED_Y, dcp);
+            table[0xDF] = new Operation(0x7F, 7, AddressingMode.ABSOLUTE_INDEXED_X, dcp);
+
+            // ── Unofficial ISCs ────────────────────────────────────────────────
+            table[0xE3] = new Operation(0xE3, 8, AddressingMode.INDEXED_INDIRECT, isc);
+            table[0xE7] = new Operation(0xE7, 5, AddressingMode.ZERO_PAGE, isc);
+            table[0xEF] = new Operation(0xEF, 6, AddressingMode.ABSOLUTE, isc);
+            table[0xF3] = new Operation(0xF3, 8, AddressingMode.INDIRECT_INDEXED, isc);
+            table[0xF7] = new Operation(0xF7, 6, AddressingMode.ZERO_PAGE_INDEXED_X, isc);
+            table[0xFB] = new Operation(0xFB, 7, AddressingMode.ABSOLUTE_INDEXED_Y, isc);
+            table[0xFF] = new Operation(0xFF, 7, AddressingMode.ABSOLUTE_INDEXED_X, isc);
 
             return table;
         }

@@ -1,5 +1,5 @@
 ﻿using NebNes.CPU;
-using NebNes.Mappers;
+using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 using NebNes.PPU.BG;
 using NebNes.PPU.Registers;
