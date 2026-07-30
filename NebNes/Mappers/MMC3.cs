@@ -39,24 +39,30 @@ namespace NebNes.Mappers {
         }
 
         public void cpuWrite(ushort address, byte value) {
-            if (address >= 0x6000 && address <= 0x7FFF)
+            if (address >= 0x6000 && address <= 0x7FFF) {
                 prgRam[address - 0x6000] = value;
+                cpu.PendingInterrupts.clearInterrupt(InterruptIndex.MAPPER);
+            }
             if ((address & 0x01) == 0) { // Even Register Banks
                 if (address >= 0x8000 && address <= 0x9FFE) { //Bank Select
                     targetRegister = ByteLib.getBits(value, 0, 3);
                     prgBankMode = ByteLib.getBit(value, 6);
                     chrBankMode = ByteLib.getBit(value, 7);
+                    cpu.PendingInterrupts.clearInterrupt(InterruptIndex.MAPPER);
                 }
                 if(address >= 0xA000 && address <= 0xBFFE) { // Nametable Mirroring
-                    // MMC3 is the inverse of the iNES header bit: 0 = vertical, 1 = horizontal.
                     if (ByteLib.getBit(value, 0) == 0) {
                         mirroring = PPUBgMirroring.VERTICAL;
+                        cpu.PendingInterrupts.clearInterrupt(InterruptIndex.MAPPER);
                         return;
                     }
                     mirroring = PPUBgMirroring.HORIZONTAL;
+                    cpu.PendingInterrupts.clearInterrupt(InterruptIndex.MAPPER);
                 }
-                if (address >= 0xC000 && address <= 0xDFFE) //IRQ Latch
+                if (address >= 0xC000 && address <= 0xDFFE) { //IRQ Latch
                     irqCounterReload = value;
+                    cpu.PendingInterrupts.clearInterrupt(InterruptIndex.MAPPER);
+                }
                 if (address >= 0xE000 && address <= 0xFFFE) { //IRQ Disable
                     irqEnabled = false;
                     cpu.PendingInterrupts.clearInterrupt(InterruptIndex.MAPPER);

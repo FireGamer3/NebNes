@@ -63,8 +63,8 @@ namespace NebNes.CPU {
             }
             int totalCycles = operation.cycles + extraCycles;
             extraCycles = 0;
-            cycles += totalCycles;
-            return totalCycles;
+            cycles += totalCycles - 1;
+            return totalCycles - 1;
         }
 
         public void addCycles(int cycles = 1) {
@@ -90,17 +90,17 @@ namespace NebNes.CPU {
                 HandleInterrupt(InterruptIndex.NMI, 0xFFFA);
             } else if (PendingInterrupts.getInterrupt(InterruptIndex.MAPPER)) {
                 if (Flags.getFlag(FlagsIndex.I)) return;
-                HandleInterrupt(InterruptIndex.MAPPER, 0xFFFE);
+                HandleInterrupt(InterruptIndex.MAPPER, 0xFFFE, false);
             }
         }
 
-        private void HandleInterrupt(InterruptIndex inter, ushort vector) {
-            if (inter == InterruptIndex.RESET) cycles += 7;
+        private void HandleInterrupt(InterruptIndex inter, ushort vector, bool shouldClear = true) {
+            cycles += 7;
             stack.push(PC.get());
             stack.push((byte)((Flags.get() & ~0x10) | 0x20));
             Flags.setFlag(FlagsIndex.I);
             PC.set(bus.read16(vector));
-            PendingInterrupts.clearInterrupt(inter);
+            if(shouldClear)PendingInterrupts.clearInterrupt(inter);
         }
 
         public Operation getOperation(byte opcode) {

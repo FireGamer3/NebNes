@@ -25,11 +25,9 @@ namespace NebNes {
         private int chunkFill = 0;
         private int samplesRemaining = 0;
 
-        // The APU is clocked at half the CPU rate. waitCycles/2 truncates the odd cycle each
-        // instruction, so carry the leftover into the next one to keep an exact 2:1 CPU:APU ratio.
-        private int apuCycleCarry = 0;
+        //private int apuCycleCarry = 0;
+        private bool apuStep = false;
 
-        // Cached delegates so the hot step loop doesn't allocate one per instruction.
         private readonly Action<float> onSample;
         private readonly Action<uint[]> onFrame;
 
@@ -90,21 +88,12 @@ namespace NebNes {
         }
 
         private void step() {
-            int waitCycles = cpu.step();
-            for (int i = 0; i < waitCycles; i++) {
-                cpu.step();
-            }
-            int ppuCycles = waitCycles * 3;
-            for (int i = 0; i < ppuCycles; i++) {
-                ppu.step(onFrame);
-            }
-
-            apuCycleCarry += waitCycles;
-            int apuCycles = apuCycleCarry / 2;
-            apuCycleCarry -= apuCycles * 2;
-            for (int i = 0; i < apuCycles; i++) {
-                apu.step(onSample);
-            }
+            cpu.step();
+            ppu.step(onFrame);
+            ppu.step(onFrame);
+            ppu.step(onFrame);
+            if(apuStep) apu.step(onSample);
+            apuStep = !apuStep;
         }
 
         private void OnSample(float sample) {

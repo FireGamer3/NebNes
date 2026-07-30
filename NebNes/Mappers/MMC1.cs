@@ -8,7 +8,7 @@ namespace NebNes.Mappers {
         private byte[] prgRam = new byte[0x2000];
         int srLen = 0;
         byte sr = 0;
-        byte control = 0x0C; // power-on: PRG mode 3 (last bank fixed at $C000)
+        byte control = 0x0C;
         byte chrBank0 = 0;
         byte chrBank1 = 0;
         byte prgBank = 0;
@@ -53,15 +53,13 @@ namespace NebNes.Mappers {
 
         public byte ppuRead(ushort address) {
             if (cart.usesChrRam()) {
-                return getChrPage(0)[address];   // 8 KB CHR-RAM, not bankable
+                return getChrPage(0)[address];
             }
 
             if (chrBankMode() == 0) {
-                // 8 KB mode: drop bit 0, select an 8 KB bank.
                 int bank8k = ByteLib.getBits(chrBank0, 1, 4);
                 return getChrPage(bank8k)[address];
             } else {
-                // 4 KB mode: two independent windows.
                 int bank4k = address < 0x1000
                     ? ByteLib.getBits(chrBank0, 0, 5)
                     : ByteLib.getBits(chrBank1, 0, 5);
@@ -111,10 +109,6 @@ namespace NebNes.Mappers {
 
         private byte nameTableArrangement() {
             return ByteLib.getBits(control, 0, 2);
-        }
-
-        private bool prgRamEnabled() {
-            return ByteLib.getBit(prgBank, 4) == 1;
         }
 
         private byte prgBankMode() {

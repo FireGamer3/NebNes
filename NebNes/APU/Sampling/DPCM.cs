@@ -113,6 +113,7 @@ namespace NebNes.APU.Sampling {
         /// </summary>
         public void stop() {
             cursorByte = sampleLength;
+            isActive = false;
         }
 
         /// <summary>

@@ -20,7 +20,15 @@
             }else if (counter == frameTimings[0] || counter == frameTimings[2]) {
                 apu.onQuarterFrameClock();
             }
-            if(counter == frameTimings[3]) reset();
+            if(counter == frameTimings[3]) {
+                if (!isOnFiveStepSeq()) apu.cpu.PendingInterrupts.setInterrupt(Enums.InterruptIndex.APU_FRAME);
+                reset();
+            }
+        }
+
+        public bool justSetIRQ() {
+            if (counter == 14916 && !isOnFiveStepSeq()) return true;
+            return false;
         }
 
         private bool isOnFiveStepSeq() {
