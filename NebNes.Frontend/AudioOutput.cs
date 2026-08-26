@@ -11,10 +11,10 @@ namespace NebNes.Frontend {
         private readonly Sdl _sdl;
         private readonly uint _device;
 
-        // ~100 ms of cushion. With audio as the master clock the producer refills this almost
+        // ~50 ms of cushion. With audio as the master clock the producer refills this almost
         // instantly, so a deeper target just buys jitter tolerance (GC pauses, Sleep granularity)
         // at the cost of latency. Lower it if you want tighter latency and don't hear underruns.
-        public const int TargetBufferedSamples = SampleRate / 10;
+        public const int TargetBufferedSamples = SampleRate / 20;
 
         public AudioOutput() {
             _sdl = Sdl.GetApi();

@@ -1,6 +1,6 @@
 using NebNes.Misc;
 
-namespace NebNes.PPU.Sprites {
+namespace NebNes.PPU.Misc {
     public struct Sprite {
         private const byte TILE_SIZE_PIXELS = 8;
         private const byte PALETTE_FOREGROUND_START = 4;

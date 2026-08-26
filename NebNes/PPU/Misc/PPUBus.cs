@@ -2,7 +2,7 @@
 using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 
-namespace NebNes.PPU {
+namespace NebNes.PPU.Misc {
     public class PPUBus {
         public byte[] vram = new byte[4096];
         public byte[] paletteRam = new byte[32];

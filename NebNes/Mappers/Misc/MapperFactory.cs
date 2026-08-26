@@ -17,6 +17,8 @@ namespace NebNes.Mappers.Misc {
                     return new CNROM(cpu, cart);
                 case 4:
                     return new MMC3(cpu, cart);
+                case 66:
+                    return new GxROM(cpu, cart);
                 default:
                     throw new ArgumentException("Mapper with ID: " +  cart.getMapperID() + ", Not Found");
             }

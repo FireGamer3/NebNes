@@ -2,6 +2,7 @@
 using NebNes.Mappers.Interfaces;
 using NebNes.Misc;
 using NebNes.PPU.BG;
+using NebNes.PPU.Misc;
 using NebNes.PPU.Registers;
 using NebNes.PPU.Registers.Loopy;
 using NebNes.PPU.Sprites;

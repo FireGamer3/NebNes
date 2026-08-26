@@ -18,7 +18,7 @@ namespace NebNes.APU.Registers {
         }
 
         public byte interruptInhibitFlag() {
-            return ByteLib.getBit(value, 7);
+            return ByteLib.getBit(value, 6);
         }
     }
 }

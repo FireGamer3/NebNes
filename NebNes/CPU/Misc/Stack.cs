@@ -1,7 +1,7 @@
 ﻿using NebNes.CPU.Registers;
 using NebNes.Misc;
 
-namespace NebNes.CPU {
+namespace NebNes.CPU.Misc {
     public class Stack {
         Bus bus;
         BaseRegister sp;

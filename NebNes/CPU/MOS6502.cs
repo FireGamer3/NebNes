@@ -1,4 +1,5 @@
 ﻿using NebNes.CPU.Instructions;
+using NebNes.CPU.Misc;
 using NebNes.CPU.Registers;
 using NebNes.Enums;
 using NebNes.Misc;
@@ -16,6 +17,7 @@ namespace NebNes.CPU {
         public RegisterInterrupts PendingInterrupts = new RegisterInterrupts();
         public Stack stack;
         private Operation[] opTable;
+        private Operation currentOperation;
         public long currentCycle = 0;
         private int cycles = 0;
         private int extraCycles = 0;
@@ -33,7 +35,7 @@ namespace NebNes.CPU {
         }
 
         public int step() {
-            if(cycles > 0) {
+            if(cycles > 1) {
                 cycles--;
                 currentCycle++;
                 return 0;
@@ -46,21 +48,7 @@ namespace NebNes.CPU {
                 Console.WriteLine($"Unknown Instruction at ${originalPC:X4} opcode ${bus.read(originalPC):X2}");
                 return 0;
             }
-            switch(operation.addressMode) {
-                case AddressingMode.IMMEDIATE:
-                    byte val = fetchByte();
-                    operation.instruction.runImmediate(val);
-                    break;
-                case AddressingMode.IMPLICIT:
-                    operation.instruction.runImplicit();
-                    break;
-                case AddressingMode.ACCUMULATOR:
-                    operation.instruction.runAcc();
-                    break;
-                default:
-                    operation.instruction.runAddress(resolveAddress(operation.addressMode));
-                    break;
-            }
+            RunOperation(operation);
             int totalCycles = operation.cycles + extraCycles;
             extraCycles = 0;
             cycles += totalCycles - 1;
@@ -83,6 +71,14 @@ namespace NebNes.CPU {
             PendingInterrupts.setInterrupt(ii);
         }
 
+        public Operation getOperation(byte opcode) {
+            return opTable[opcode];
+        }
+
+        public byte read(ushort address) {
+            return bus.read(address);
+        }
+
         private void handlePendingInterrupt() {
             if (PendingInterrupts.getInterrupt(InterruptIndex.RESET)) {
                 HandleInterrupt(InterruptIndex.RESET, 0xFFFC);
@@ -103,19 +99,29 @@ namespace NebNes.CPU {
             if(shouldClear)PendingInterrupts.clearInterrupt(inter);
         }
 
-        public Operation getOperation(byte opcode) {
-            return opTable[opcode];
-        }
-
-        public byte read(ushort address) {
-            return bus.read(address);
-        }
-
         private Operation fetchOperation() {
             byte opcode = bus.read(PC.get());
             Operation op = opTable[opcode];
             PC.increment();
             return op;
+        }
+
+        private void RunOperation(Operation operation) {
+            switch (operation.addressMode) {
+                case AddressingMode.IMMEDIATE:
+                    byte val = fetchByte();
+                    operation.instruction.runImmediate(val);
+                    break;
+                case AddressingMode.IMPLICIT:
+                    operation.instruction.runImplicit();
+                    break;
+                case AddressingMode.ACCUMULATOR:
+                    operation.instruction.runAcc();
+                    break;
+                default:
+                    operation.instruction.runAddress(resolveAddress(operation.addressMode));
+                    break;
+            }
         }
 
         private ushort resolveAddress(AddressingMode mode) {

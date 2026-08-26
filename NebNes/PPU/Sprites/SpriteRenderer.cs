@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using NebNes.PPU.BG;
+using NebNes.PPU.Misc;
 
 namespace NebNes.PPU.Sprites {
     public class SpriteRenderer {

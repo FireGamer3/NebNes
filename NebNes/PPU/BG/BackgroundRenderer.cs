@@ -1,4 +1,5 @@
 ﻿using NebNes.Misc;
+using NebNes.PPU.Misc;
 using System.Xml;
 
 namespace NebNes.PPU.BG {
@@ -16,7 +17,6 @@ namespace NebNes.PPU.BG {
                 int scrolledY = ppu.loopy.scrolledY();
 
                 int nameTableID = ppu.loopy.nameTableID(scrolledX);
-                ushort nameTableAddress = (ushort)(0x2000 + nameTableID * 1024);
 
                 int nameTableX = scrolledX % 256;
                 int nameTableY = scrolledY % 240;

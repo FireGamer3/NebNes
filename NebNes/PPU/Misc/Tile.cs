@@ -1,6 +1,6 @@
 ﻿using NebNes.Misc;
 
-namespace NebNes.PPU.BG {
+namespace NebNes.PPU.Misc {
     public struct Tile {
         public ushort tableAddress;
         public ushort lowPlaneAddress;
