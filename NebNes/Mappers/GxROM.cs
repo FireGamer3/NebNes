@@ -10,9 +10,9 @@ namespace NebNes.Mappers {
 
         public byte cpuRead(ushort address) {
             if (address >= 0x8000 && address <= 0xbfff) {
-                return getPrgPage(prgRomBank)[address - 0x8000];
+                return getPrgPage(prgRomBank * 2)[address - 0x8000];
             } else if (address >= 0xc000 && address <= 0xffff) {
-                return getPrgPage(prgRomBank + 1)[address - 0xc000];
+                return getPrgPage(prgRomBank * 2 + 1)[address - 0xc000];
             }
             return 0;
         }

@@ -17,6 +17,12 @@ namespace NebNes.Mappers.Misc {
                     return new CNROM(cpu, cart);
                 case 4:
                     return new MMC3(cpu, cart);
+                case 7:
+                    return new AxROM(cpu, cart);
+                case 9:
+                    return new MMC2(cpu, cart);
+                case 10:
+                    return new MMC4(cpu, cart);
                 case 66:
                     return new GxROM(cpu, cart);
                 default:

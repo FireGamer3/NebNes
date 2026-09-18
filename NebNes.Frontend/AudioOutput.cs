@@ -5,7 +5,6 @@ namespace NebNes.Frontend {
         public const int SampleRate = 44100;
         public const int Channels = 1;
 
-        private const uint INIT_AUDIO = 0x00000010;
         private const int MaxBufferedSamples = SampleRate / 4;
 
         private readonly Sdl _sdl;
@@ -17,9 +16,8 @@ namespace NebNes.Frontend {
         public const int TargetBufferedSamples = SampleRate / 20;
 
         public AudioOutput() {
-            _sdl = Sdl.GetApi();
-            if (_sdl.Init(INIT_AUDIO) != 0)
-                throw new InvalidOperationException($"SDL_Init(audio) failed: {_sdl.GetErrorS()}");
+            SdlHost.Init(SdlHost.InitAudio);
+            _sdl = SdlHost.Api;
 
             var desired = new AudioSpec {
                 Freq = SampleRate,
@@ -29,11 +27,19 @@ namespace NebNes.Frontend {
                 Callback = default,
             };
 
-            AudioSpec obtained;
+            AudioSpec obtained = default;
 
+            // allowed_changes = 0: SDL must hand back exactly what we asked for (converting
+            // internally if the hardware disagrees), so `obtained` should mirror `desired`.
+            // Log it anyway — a mismatch here is the first thing to check when audio sounds wrong.
             _device = _sdl.OpenAudioDevice((byte*)null, 0, &desired, &obtained, 0);
-            if (_device == 0)
+            if (_device == 0) {
+                SdlHost.QuitSubSystem(SdlHost.InitAudio);
                 throw new InvalidOperationException($"SDL_OpenAudioDevice failed: {_sdl.GetErrorS()}");
+            }
+
+            Console.WriteLine($"Audio: {obtained.Freq} Hz, {obtained.Channels} ch, " +
+                              $"format 0x{obtained.Format:X4}, {obtained.Samples} sample buffer");
 
             _sdl.PauseAudioDevice(_device, 0);
         }
@@ -45,7 +51,12 @@ namespace NebNes.Frontend {
         public void Queue(float[] samples) => Queue(samples, samples.Length);
 
         public void Queue(float[] samples, int count) {
+            ArgumentNullException.ThrowIfNull(samples);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(count, samples.Length);
             if (count <= 0) return;
+
+            // Backstop only: SamplesNeeded() caps generation well below this, so reaching it
+            // means the producer bypassed the pacing and the excess is better dropped than queued.
             if (QueuedSamples > MaxBufferedSamples) return;
 
             fixed (float* p = samples) {
@@ -59,7 +70,7 @@ namespace NebNes.Frontend {
                 _sdl.ClearQueuedAudio(_device);
                 _sdl.CloseAudioDevice(_device);
             }
-            _sdl.Dispose();
+            SdlHost.QuitSubSystem(SdlHost.InitAudio);
         }
     }
 }

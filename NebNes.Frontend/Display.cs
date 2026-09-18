@@ -8,8 +8,7 @@ namespace NebNes.Frontend {
         public const int NesHeight = 240;
 
         private const uint PIXELFORMAT_ARGB8888 = 0x16362004;
-        private const uint INIT_VIDEO = 0x00000020;
-        private const uint INIT_EVENTS = 0x00004000;
+        private const uint Subsystems = SdlHost.InitVideo | SdlHost.InitEvents;
 
         private readonly Sdl _sdl;
         private Window* _window;
@@ -28,14 +27,15 @@ namespace NebNes.Frontend {
         /// <summary>Raised when the user asks to open a ROM (Ctrl+O).</summary>
         public Action? OpenRomRequested;
 
-        /// <summary>Raised when the user asks to reset the console (R).</summary>
+        /// <summary>Raised when the user asks to reset the console (R, without Ctrl).</summary>
         public Action? ResetRequested;
 
-        public Display(string title, int scale) {
-            _sdl = Sdl.GetApi();
+        /// <summary>Raised when the user asks to record a CPU trace (T, without Ctrl).</summary>
+        public Action? TraceRequested;
 
-            if (_sdl.Init(INIT_VIDEO | INIT_EVENTS) != 0)
-                throw new InvalidOperationException($"SDL_Init failed: {_sdl.GetErrorS()}");
+        public Display(string title, int scale) {
+            SdlHost.Init(Subsystems);
+            _sdl = SdlHost.Api;
 
             _sdl.SetHint("SDL_RENDER_SCALE_QUALITY", "0");
 
@@ -47,27 +47,52 @@ namespace NebNes.Frontend {
             if (_window == null)
                 throw new InvalidOperationException($"SDL_CreateWindow failed: {_sdl.GetErrorS()}");
 
-            // No vsync: audio is the master clock (the main loop paces the emulator by how
-            // many samples SDL still needs). Blocking on vsync would throttle the producer to
-            // ~1x real-time, so the audio queue could never build a cushion and would underrun.
-            _renderer = _sdl.CreateRenderer(_window, -1,
-                (uint)RendererFlags.Accelerated);
-            if (_renderer == null)
-                throw new InvalidOperationException($"SDL_CreateRenderer failed: {_sdl.GetErrorS()}");
+            // Everything past the window has to unwind by hand: a throw from here leaves the
+            // caller's `using` un-entered, so nothing else would ever destroy the window.
+            try {
+                // No vsync: audio is the master clock (the main loop paces the emulator by how
+                // many samples SDL still needs). Blocking on vsync would throttle the producer to
+                // ~1x real-time, so the audio queue could never build a cushion and would underrun.
+                _renderer = _sdl.CreateRenderer(_window, -1,
+                    (uint)RendererFlags.Accelerated);
+                if (_renderer == null)
+                    throw new InvalidOperationException($"SDL_CreateRenderer failed: {_sdl.GetErrorS()}");
 
-            _sdl.RenderSetLogicalSize(_renderer, NesWidth, NesHeight);
-            _sdl.RenderSetIntegerScale(_renderer, SdlBool.True);
+                _sdl.RenderSetLogicalSize(_renderer, NesWidth, NesHeight);
+                _sdl.RenderSetIntegerScale(_renderer, SdlBool.True);
 
-            _texture = _sdl.CreateTexture(_renderer, PIXELFORMAT_ARGB8888,
-                (int)TextureAccess.Streaming, NesWidth, NesHeight);
-            if (_texture == null)
-                throw new InvalidOperationException($"SDL_CreateTexture failed: {_sdl.GetErrorS()}");
+                _texture = _sdl.CreateTexture(_renderer, PIXELFORMAT_ARGB8888,
+                    (int)TextureAccess.Streaming, NesWidth, NesHeight);
+                if (_texture == null)
+                    throw new InvalidOperationException($"SDL_CreateTexture failed: {_sdl.GetErrorS()}");
+            } catch {
+                Dispose();
+                throw;
+            }
 
             // Deliver SDL_DROPFILE events (enabled by default on most builds; make it explicit).
             _sdl.EventState((uint)EventType.Dropfile, 1);
         }
 
         public void SetTitle(string title) => _sdl.SetWindowTitle(_window, title);
+
+        /// <summary>
+        /// The native window handle (HWND on Windows), or <see cref="IntPtr.Zero"/> if SDL can't
+        /// supply one. Used to parent modal dialogs so they can't open behind the emulator window.
+        /// </summary>
+        public IntPtr NativeHandle {
+            get {
+                if (_window == null) return IntPtr.Zero;
+
+                SysWMInfo info = default;
+                // SDL refuses the call unless the caller stamps the headers' version first.
+                info.Version = new Silk.NET.SDL.Version {
+                    Major = Sdl.MajorVersion, Minor = Sdl.MinorVersion, Patch = Sdl.Patchlevel,
+                };
+                if (!_sdl.GetWindowWMInfo(_window, &info)) return IntPtr.Zero;
+                return info.Subsystem == SysWMType.Windows ? info.Info.Win.Hwnd : IntPtr.Zero;
+            }
+        }
 
         public void UpdateFrame(uint[] framebuffer) {
             if (framebuffer.Length != NesWidth * NesHeight)
@@ -98,8 +123,13 @@ namespace NebNes.Frontend {
                             OpenRomRequested?.Invoke();
                             break;
                         }
-                        if (scancode == Scancode.ScancodeR && e.Key.Repeat == 0) {
+                        // Ctrl+R is a common "reload" reflex elsewhere; don't let it power-cycle.
+                        if (scancode == Scancode.ScancodeR && !ctrl && e.Key.Repeat == 0) {
                             ResetRequested?.Invoke();
+                            break;
+                        }
+                        if (scancode == Scancode.ScancodeT && !ctrl && e.Key.Repeat == 0) {
+                            TraceRequested?.Invoke();
                             break;
                         }
                         KeyChanged?.Invoke(scancode, true);
@@ -118,6 +148,7 @@ namespace NebNes.Frontend {
             return true;
         }
 
+        /// <summary>The display's refresh rate in Hz, or 0 if SDL can't report one.</summary>
         public int RefreshRate {
             get {
                 DisplayMode mode = default;
@@ -126,11 +157,10 @@ namespace NebNes.Frontend {
         }
 
         public static int SuggestScale() {
-            var sdl = Sdl.GetApi();
-            if (sdl.Init(INIT_VIDEO) != 0) return 3;
+            SdlHost.Init(SdlHost.InitVideo);
 
             Rectangle<int> bounds = default;
-            if (sdl.GetDisplayUsableBounds(0, ref bounds) != 0 || bounds.Size.Y <= 0)
+            if (SdlHost.Api.GetDisplayUsableBounds(0, ref bounds) != 0 || bounds.Size.Y <= 0)
                 return 3;
 
             int byHeight = (int)(bounds.Size.Y * 0.9) / NesHeight;
@@ -139,11 +169,10 @@ namespace NebNes.Frontend {
         }
 
         public void Dispose() {
-            if (_texture != null) _sdl.DestroyTexture(_texture);
-            if (_renderer != null) _sdl.DestroyRenderer(_renderer);
-            if (_window != null) _sdl.DestroyWindow(_window);
-            _sdl.Quit();
-            _sdl.Dispose();
+            if (_texture != null) { _sdl.DestroyTexture(_texture); _texture = null; }
+            if (_renderer != null) { _sdl.DestroyRenderer(_renderer); _renderer = null; }
+            if (_window != null) { _sdl.DestroyWindow(_window); _window = null; }
+            SdlHost.QuitSubSystem(Subsystems);
         }
     }
 }

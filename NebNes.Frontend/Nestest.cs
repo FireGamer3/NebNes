@@ -12,6 +12,11 @@ namespace NebNes.Frontend {
     /// Headless nestest runner. Executes the CPU-only "automated" mode (entry at $C000),
     /// writes a nestest.log-format trace, diffs it against the canonical reference log if
     /// present, and prints the $02/$03 result codes the ROM leaves behind.
+    /// <para>
+    /// Exit codes: 0 = pass, 1 = the ROM reported a failure or the trace diverged from the
+    /// reference, 2 = the run could not be set up (bad ROM, missing file). Non-zero means
+    /// "do not trust the CPU", so this is usable as a build gate.
+    /// </para>
     /// </summary>
     internal static class Nestest {
         private const ushort EntryPoint = 0xC000;
@@ -26,7 +31,7 @@ namespace NebNes.Frontend {
             Cart cart = new Cart(rom);
             if (cart.isRomInvalid()) {
                 Console.WriteLine("nestest: ROM is not a valid iNES 1.0 image.");
-                return 1;
+                return 2;
             }
             Controller[] controllers = { new Controller(), new Controller() };
             controllers[0].SetOther(controllers[1]);
@@ -51,6 +56,7 @@ namespace NebNes.Frontend {
             using CpuTracer tracer = new CpuTracer(cpu, bus, sink, MaxInstructions, cycleOffset: 7);
             tracer.Attach();
 
+            bool halted = false;
             int executed = 0;
             for (; executed < MaxInstructions; executed++) {
                 ushort pc = cpu.PC.get();
@@ -60,6 +66,7 @@ namespace NebNes.Frontend {
                 if (n <= 0) {                // unknown opcode (MOS6502 prints its own message)
                     Console.WriteLine($"nestest: stopped at ${pc:X4} opcode ${op:X2} (unimplemented or stuck) after {executed} instructions.");
                     executed++;
+                    halted = true;
                     break;
                 }
                 for (int j = 0; j < n; j++) cpu.step();   // drain the cycle counter to the next boundary
@@ -73,21 +80,27 @@ namespace NebNes.Frontend {
 
             byte r02 = bus.read(0x0002);
             byte r03 = bus.read(0x0003);
-            Console.WriteLine($"nestest: result codes  $02={r02:X2}  $03={r03:X2}  ({(r02 == 0 && r03 == 0 ? "PASS" : "FAIL")})");
+            bool codesOk = r02 == 0 && r03 == 0;
+            Console.WriteLine($"nestest: result codes  $02={r02:X2}  $03={r03:X2}  ({(codesOk ? "PASS" : "FAIL")})");
 
+            bool traceOk = true;
             if (referencePath is not null && File.Exists(referencePath)) {
-                DiffAgainstReference(trace, referencePath);
+                traceOk = DiffAgainstReference(trace, referencePath);
             } else {
                 Console.WriteLine("nestest: no reference log found; skipping diff. (Expected at testRoms/nestest.log)");
             }
-            return 0;
+
+            bool pass = codesOk && traceOk && !halted;
+            Console.WriteLine($"nestest: {(pass ? "PASS" : "FAIL")}");
+            return pass ? 0 : 1;
         }
 
         private static readonly Regex FieldsRx =
             new(@"^(?<pc>[0-9A-F]{4}).*?(?<regs>A:[0-9A-F]{2} X:[0-9A-F]{2} Y:[0-9A-F]{2} P:[0-9A-F]{2} SP:[0-9A-F]{2})",
                 RegexOptions.Compiled);
 
-        private static void DiffAgainstReference(string mine, string referencePath) {
+        /// <summary>Returns true when the trace matches the reference over their common prefix.</summary>
+        private static bool DiffAgainstReference(string mine, string referencePath) {
             string[] mineLines = mine.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             string[] refLines = File.ReadAllLines(referencePath);
 
@@ -105,9 +118,10 @@ namespace NebNes.Frontend {
                 Console.WriteLine($"  expected: {refLines[i].TrimEnd()}");
                 Console.WriteLine($"  actual:   {mineLines[i].TrimEnd()}");
                 if (i > 0) Console.WriteLine($"  (prev ok: {refLines[i - 1].TrimEnd()})");
-                return;
+                return false;
             }
             Console.WriteLine($"nestest: {limit} lines match the reference (PC + registers).");
+            return true;
         }
     }
 }

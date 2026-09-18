@@ -19,7 +19,9 @@ namespace NebNes.CPU {
         private Operation[] opTable;
         private Operation currentOperation;
         public long currentCycle = 0;
-        private int cycles = 0;
+        // Cycles left in the current instruction, including the one being executed; 1 = at a
+        // boundary. Starts at 1 so the first instruction isn't a cycle short.
+        private int cycles = 1;
         private int extraCycles = 0;
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace NebNes.CPU {
             }
             if (PendingInterrupts.get() > 0) handlePendingInterrupt();
             OnInstruction?.Invoke(this);
+            currentCycle++;
             ushort originalPC = PC.get();
             Operation operation = fetchOperation();
             if (operation.instruction == null) {
@@ -119,12 +122,12 @@ namespace NebNes.CPU {
                     operation.instruction.runAcc();
                     break;
                 default:
-                    operation.instruction.runAddress(resolveAddress(operation.addressMode));
+                    operation.instruction.runAddress(resolveAddress(operation.addressMode, operation.hasPageCrossPenalty));
                     break;
             }
         }
 
-        private ushort resolveAddress(AddressingMode mode) {
+        private ushort resolveAddress(AddressingMode mode, bool pageCrossPenalty) {
             switch (mode) {
                 case AddressingMode.ZERO_PAGE:
                     return fetchByte();
@@ -141,14 +144,14 @@ namespace NebNes.CPU {
                 case AddressingMode.ABSOLUTE_INDEXED_X: {
                         ushort baseAddr = fetchWord();
                         ushort addr = (ushort)(baseAddr + X.get());
-                        checkPageCross(baseAddr, addr);
+                        if (pageCrossPenalty) checkPageCross(baseAddr, addr);
                         return addr;
                     }
 
                 case AddressingMode.ABSOLUTE_INDEXED_Y: {
                         ushort baseAddr = fetchWord();
                         ushort addr = (ushort)(baseAddr + Y.get());
-                        checkPageCross(baseAddr, addr);
+                        if (pageCrossPenalty) checkPageCross(baseAddr, addr);
                         return addr;
                     }
 
@@ -173,7 +176,7 @@ namespace NebNes.CPU {
                         byte hi = bus.read((byte)(zp + 1));
                         ushort baseAddr = (ushort)(lo | (hi << 8));
                         ushort addr = (ushort)(baseAddr + Y.get());
-                        checkPageCross(baseAddr, addr);
+                        if (pageCrossPenalty) checkPageCross(baseAddr, addr);
                         return addr;
                     }
 

@@ -8,8 +8,7 @@ namespace NebNes.CPU.Instructions.Branching {
 
         public void runAddress(ushort address) { 
             if(cpu.Flags.getFlag(Enums.FlagsIndex.V)) {
-                cpu.addExtraCycles();
-                cpu.PC.set(address);
+                takeBranch(address);
             }else cpu.clearExtraCycles();
         }
 

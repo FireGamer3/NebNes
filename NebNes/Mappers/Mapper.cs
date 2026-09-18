@@ -13,6 +13,7 @@ namespace NebNes.Mappers {
         protected PageTable prgPages;
         protected PageTable prgPages8k;
         protected PageTable chrPages;
+        protected PageTable chrPages4k;
         protected PageTable chrPages2k;
         protected PageTable chrPages1k;
 
@@ -26,6 +27,7 @@ namespace NebNes.Mappers {
             prgPages = new PageTable(prg, 16 * 1024, totalPrgPages);
             prgPages8k = new PageTable(prg, 8 * 1024, totalPrgPages * 2);
             chrPages = new PageTable(chr, 8 * 1024, totalChrPages);
+            chrPages4k = new PageTable(chr, 4 * 1024, totalChrPages * 2);
             chrPages2k = new PageTable(chr, 2 * 1024, totalChrPages * 4);
             chrPages1k = new PageTable(chr, 1024, totalChrPages * 8);
             onLoad();
@@ -48,6 +50,9 @@ namespace NebNes.Mappers {
 
         public Span<byte> getChrPage(int page) {
             return chrPages.wrapped(page);
+        }
+        public Span<byte> getChrPage4k(int page) {
+            return chrPages4k.wrapped(page);
         }
 
         public Span<byte> getChrPage2K(int page) {

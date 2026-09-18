@@ -34,7 +34,7 @@ namespace NebNes.PPU.Sprites {
                     }
                 }
             }
-            sprites.Reverse();
+            //sprites.Reverse();
         }
 
         private void render() {
@@ -44,18 +44,17 @@ namespace NebNes.PPU.Sprites {
                 int insideY = sprite.diffY(y);
                 int tileInsideY = insideY % 8;
                 Tile tile = new Tile(ppu, sprite.patternTableID, sprite.tileIdFor(insideY), sprite.flipY ? 7 - tileInsideY : tileInsideY);
-                colors[0] = ppu.getColor(sprite.paletteId, 0);
-                colors[1] = ppu.getColor(sprite.paletteId, 1);
-                colors[2] = ppu.getColor(sprite.paletteId, 2);
-                colors[3] = ppu.getColor(sprite.paletteId, 3);
+                for (int i = 0; i < 4; i++)
+                    colors[i] = ppu.getColor(sprite.paletteId, (byte)i);
+
                 for (int insideX = 0; insideX < 8; insideX++) {
-                    byte colorIndex = tile.getColorIndex((byte)insideX);
-                    int finalX = sprite.flipX ? 7 - insideX : insideX;
+                    byte colorIndex = sprite.flipX ? tile.getColorIndex((byte)(7 - insideX)) : tile.getColorIndex((byte)insideX);
+                    int px = sprite.x + insideX;
+                    if (ppu.ppuMask.showSpritesInFirst8Pixels() == 0 && px < 8) continue;
                     if (colorIndex > 0) {
-                        int px = sprite.x + finalX;
-                        if (ppu.ppuMask.showSpritesInFirst8Pixels() == 0 && px < 8) continue;
                         if (px >= 256) continue;
-                        buffer[px] = new SpritePixel { set = true, sprite = sprite, color = colors[colorIndex] };
+                        if (!buffer[px].set)
+                            buffer[px] = new SpritePixel { set = true, sprite = sprite, color = colors[colorIndex] };
                         if (sprite.id == 0 && ppu.isBackgroundPixelOpaque((byte)px, (byte)y) && ppu.ppuMask.showBackground() == 1)
                             ppu.ppuStatus.setSprite0Hit(true);
                     }

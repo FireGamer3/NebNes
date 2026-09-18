@@ -50,12 +50,12 @@ namespace NebNes.Misc {
         }
 
         public int chrRamSize() {
-            if (!isNes2()) return 8192;
+            if (!isNes2()) return 32768;
             int volatileShift = ByteLib.getBits(_romBytes[11], 0, 4);
             int nvramShift = ByteLib.getBits(_romBytes[11], 4, 4);
             int size = (volatileShift == 0 ? 0 : 64 << volatileShift)
                      + (nvramShift == 0 ? 0 : 64 << nvramShift);
-            return Math.Max(8192, size);
+            return Math.Max(32768, size);
         }
 
         public byte[] getChr() {

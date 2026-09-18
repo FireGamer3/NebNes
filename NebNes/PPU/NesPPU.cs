@@ -84,7 +84,7 @@ namespace NebNes.PPU {
             return nesMasterPalette[masterColorIndex % 64];
         }
 
-        public void plotBG(byte x, byte y, uint color, byte colorIndex) {
+        public void plotBG(int x, int y, uint color, byte colorIndex) {
             colorIndexes[y * 256 + x] = colorIndex;
             plot(x, y, color);
             if (ppuMask.showBackground() == 1)
@@ -95,7 +95,7 @@ namespace NebNes.PPU {
             return colorIndexes[y * 256 + x] > 0;
         }
 
-        public void plot(byte x, byte y, uint color) {
+        public void plot(int x, int y, uint color) {
             frameBuffer[y * 256 + x] = ppuMask.transform(color);
         }
 

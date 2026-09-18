@@ -12,7 +12,12 @@ namespace NebNes.PPU.BG {
 
         public void renderScanline() {
             int y = ppu.scanline;
-            for (int x = 0; x < 256;) {
+            for (int x = 0; x < 272;) {
+                if (ppu.ppuMask.showBackground() == 0 || (ppu.ppuMask.showBackgroundInFirst8Pixels() == 0 && x < 8)) {
+                    if(x < 256) ppu.plotBG(x, y, ppu.getColor(0, 0), 0);
+                    x++;
+                    continue;
+                }
                 int scrolledX =  ppu.loopy.scrolledX(x);
                 int scrolledY = ppu.loopy.scrolledY();
 
@@ -31,17 +36,12 @@ namespace NebNes.PPU.BG {
                 byte tileInsideY = (byte)(nameTableY % 8);
 
                 byte tileStartX = (byte)(nameTableX % 8);
-                byte tilePixels = (byte)Math.Min(8 - tileStartX, 256 - x);
+                byte tilePixels = (byte)Math.Min(8 - tileStartX, 272 - x);
                 Tile tile = new Tile(ppu, patternTableID, tileID, tileInsideY);
-
                 for (int xx = 0; xx < tilePixels; xx++) {
                     byte colorIndex = tile.getColorIndex((byte)(tileStartX + xx));
                     uint color = colorIndex > 0 ? ppu.getColor(paletteID, colorIndex) : ppu.getColor(0,0);
-                    if(ppu.ppuMask.showBackground() == 0 || (ppu.ppuMask.showBackgroundInFirst8Pixels() == 0 && x < 8)) {
-                        ppu.plotBG((byte)(x + xx), (byte)y, this.ppu.getColor(0, 0), 0);
-                        continue;
-                    }
-                    ppu.plotBG((byte)(x + xx), (byte)y, color, colorIndex);
+                    if (x + xx < 256) ppu.plotBG((x + xx), y, color, colorIndex);
                 }
                 x += tilePixels;
             }

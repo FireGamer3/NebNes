@@ -52,10 +52,6 @@ namespace NebNes.Mappers {
         }
 
         public byte ppuRead(ushort address) {
-            if (cart.usesChrRam()) {
-                return getChrPage(0)[address];
-            }
-
             if (chrBankMode() == 0) {
                 int bank8k = ByteLib.getBits(chrBank0, 1, 4);
                 return getChrPage(bank8k)[address];

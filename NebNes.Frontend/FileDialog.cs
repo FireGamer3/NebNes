@@ -36,10 +36,15 @@ namespace NebNes.Frontend {
         private const int OFN_PATHMUSTEXIST = 0x00000800;
         private const int OFN_FILEMUSTEXIST = 0x00001000;
         private const int OFN_NOCHANGEDIR = 0x00000008;
-        private const int MaxPath = 260;
+        // comdlg32 accepts a buffer well past MAX_PATH; 260 silently rejected long paths.
+        private const int MaxPath = 32768;
 
         /// <summary>Shows the dialog and returns the chosen path, or null if the user cancelled.</summary>
         public static string? OpenRom(IntPtr owner) {
+            if (!OperatingSystem.IsWindows())
+                throw new PlatformNotSupportedException(
+                    "The built-in file browser is Windows-only; drag a .nes file onto the window instead.");
+
             IntPtr buffer = Marshal.AllocHGlobal(MaxPath * sizeof(char));
             try {
                 Marshal.WriteInt16(buffer, 0, 0); // empty initial file name
